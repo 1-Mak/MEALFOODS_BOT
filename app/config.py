@@ -11,6 +11,13 @@ class Settings(BaseSettings):
     )
 
     max_bot_token: SecretStr
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/mealfoods"
+    miniapp_url: str = ""
+
+    # 1С OData (этап 7, пока опциональные)
+    e4_odata_url: str = ""
+    e4_username: str = ""
+    e4_password: SecretStr = SecretStr("")
 
 
 settings = Settings()
