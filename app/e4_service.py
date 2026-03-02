@@ -47,6 +47,9 @@ _COUNTERPARTIES = [
     E4Counterparty("guid-cp-001", "ООО Ромашка", "+79991234567"),
     E4Counterparty("guid-cp-002", "ООО Лютик", "+79991234567"),
     E4Counterparty("guid-cp-003", "ИП Иванов", "+79997654321"),
+    E4Counterparty("guid-cp-003", "ИП Макаров", "+79200585280"),
+    E4Counterparty("guid-cp-003", "ИП Субботина", "+79081511376"),
+    E4Counterparty("guid-cp-003", "ИП Субботина", "+79202590557"),
 ]
 
 _DELIVERY_POINTS = [

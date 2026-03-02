@@ -1,0 +1,129 @@
+.page {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+  overflow-x: hidden;
+}
+
+.page-header {
+  background: #1976d2;
+  color: white;
+  padding: 14px 16px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.page-content {
+  padding: 20px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Counterparty card */
+.cp-card {
+  background: white;
+  border: 2px solid #1976d2;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.cp-card .cp-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px;
+}
+
+.cp-card .cp-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1976d2;
+  margin: 0;
+}
+
+/* Form fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+}
+
+.field select,
+.field input {
+  padding: 11px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  background: white;
+  width: 100%;
+  max-width: 100%;
+  transition: border-color 0.2s;
+  color: #333;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.field input[type="date"] {
+  clip-path: inset(0);
+}
+
+.field select:focus,
+.field input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.15);
+}
+
+/* Navigation buttons */
+.nav-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* Footer */
+.page-footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 12px;
+  color: #aaa;
+  letter-spacing: 0.3px;
+}
+
+/* Loading & error */
+.loading-screen,
+.error-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  text-align: center;
+}
+
+.error-screen p {
+  color: #d32f2f;
+  font-size: 15px;
+}

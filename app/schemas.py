@@ -6,6 +6,15 @@ from pydantic import BaseModel
 
 
 # ------------------------------------------------------------------
+# Counterparty (from 1C via e4_service)
+# ------------------------------------------------------------------
+
+class CounterpartyOut(BaseModel):
+    e4_guid: str
+    name: str
+
+
+# ------------------------------------------------------------------
 # Auth
 # ------------------------------------------------------------------
 
@@ -17,15 +26,6 @@ class AuthResponse(BaseModel):
     token: str
     user_id: int
     counterparties: list[CounterpartyOut]
-
-
-# ------------------------------------------------------------------
-# Counterparty (from 1C via e4_service)
-# ------------------------------------------------------------------
-
-class CounterpartyOut(BaseModel):
-    e4_guid: str
-    name: str
 
 
 # ------------------------------------------------------------------
