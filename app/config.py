@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     )
 
     max_bot_token: SecretStr
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/mealfoods"
     miniapp_url: str = ""
 
     # 1С OData (этап 7, пока опциональные)

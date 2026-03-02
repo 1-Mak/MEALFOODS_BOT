@@ -1,18 +1,69 @@
+"""Simple async SQLite database layer via aiosqlite."""
 from __future__ import annotations
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
+import aiosqlite
 
-from app.config import settings
-
-engine = create_async_engine(settings.database_url, echo=False)
-async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+DB_PATH = "data.db"
 
 
-class Base(DeclarativeBase):
-    pass
+async def init_db() -> None:
+    """Create tables if they don't exist."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                max_user_id INTEGER UNIQUE NOT NULL,
+                phone TEXT,
+                counterparty_guid TEXT,
+                counterparty_name TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        await db.commit()
 
 
-async def get_session() -> AsyncSession:  # type: ignore[misc]
-    async with async_session() as session:
-        yield session
+async def get_user_by_max_id(max_user_id: int) -> dict | None:
+    """Find a user by their MAX messenger user_id."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE max_user_id = ?", (max_user_id,),
+        )
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
+
+async def upsert_user(
+    max_user_id: int,
+    phone: str | None = None,
+    counterparty_guid: str | None = None,
+    counterparty_name: str | None = None,
+) -> None:
+    """Create or update a user record."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            """
+            INSERT INTO users (max_user_id, phone, counterparty_guid, counterparty_name)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(max_user_id) DO UPDATE SET
+                phone = COALESCE(excluded.phone, phone),
+                counterparty_guid = COALESCE(excluded.counterparty_guid, counterparty_guid),
+                counterparty_name = COALESCE(excluded.counterparty_name, counterparty_name)
+            """,
+            (max_user_id, phone, counterparty_guid, counterparty_name),
+        )
+        await db.commit()
+
+
+async def set_counterparty(
+    max_user_id: int,
+    counterparty_guid: str,
+    counterparty_name: str,
+) -> None:
+    """Set the selected counterparty for a user."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE users SET counterparty_guid = ?, counterparty_name = ? WHERE max_user_id = ?",
+            (counterparty_guid, counterparty_name, max_user_id),
+        )
+        await db.commit()

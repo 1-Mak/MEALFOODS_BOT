@@ -8,7 +8,7 @@ from fastapi import FastAPI
 
 from app.bot import make_handler
 from app.config import settings
-from app.database import Base, engine
+from app.database import init_db
 from app.max_client import MaxClient
 from app.polling import run_polling
 from app.routers import auth, counterparties, orders, products
@@ -39,10 +39,8 @@ _polling_task: asyncio.Task[None] | None = None
 async def lifespan(_app: FastAPI):  # noqa: ANN201
     global client, _polling_task
 
-    # Create DB tables (dev convenience; use alembic in production)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables ready")
+    await init_db()
+    logger.info("Database ready")
 
     # Start MAX bot
     token = settings.max_bot_token.get_secret_value()

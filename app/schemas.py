@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 
 from pydantic import BaseModel
-
-from app.models import OrderStatus
 
 
 # ------------------------------------------------------------------
@@ -22,35 +20,28 @@ class AuthResponse(BaseModel):
 
 
 # ------------------------------------------------------------------
-# Counterparty
+# Counterparty (from 1C via e4_service)
 # ------------------------------------------------------------------
 
 class CounterpartyOut(BaseModel):
-    id: int
     e4_guid: str
     name: str
 
-    model_config = {"from_attributes": True}
-
 
 # ------------------------------------------------------------------
-# Delivery point
+# Delivery point (from 1C via e4_service)
 # ------------------------------------------------------------------
 
 class DeliveryPointOut(BaseModel):
-    id: int
     e4_guid: str
     address: str
 
-    model_config = {"from_attributes": True}
-
 
 # ------------------------------------------------------------------
-# Product
+# Product (from 1C via e4_service)
 # ------------------------------------------------------------------
 
 class ProductOut(BaseModel):
-    id: int
     e4_guid: str
     name: str
     unit: str
@@ -60,59 +51,24 @@ class ProductOut(BaseModel):
     price: float
     vat_rate: float
 
-    model_config = {"from_attributes": True}
-
 
 # ------------------------------------------------------------------
-# Order
+# Order (sent to 1C via e4_service)
 # ------------------------------------------------------------------
 
 class OrderItemIn(BaseModel):
-    product_id: int
+    product_guid: str
     quantity: int
 
 
 class OrderCreateIn(BaseModel):
-    counterparty_id: int
-    delivery_point_id: int
+    counterparty_guid: str
+    delivery_point_guid: str
     delivery_date: date
     items: list[OrderItemIn]
 
 
 class OrderUpdateIn(BaseModel):
-    delivery_point_id: int | None = None
+    delivery_point_guid: str | None = None
     delivery_date: date | None = None
     items: list[OrderItemIn] | None = None
-
-
-class OrderItemOut(BaseModel):
-    id: int
-    product_id: int
-    product_name: str
-    quantity: int
-    price: float
-    amount: float
-
-    model_config = {"from_attributes": True}
-
-
-class OrderOut(BaseModel):
-    id: int
-    counterparty_id: int
-    delivery_point_id: int | None
-    delivery_date: date | None
-    status: OrderStatus
-    total_price: float
-    total_net_weight: float
-    total_gross_weight: float
-    total_boxes: int
-    total_pallets: int
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class OrderDetailOut(OrderOut):
-    items: list[OrderItemOut]
-    delivery_point_address: str | None = None
