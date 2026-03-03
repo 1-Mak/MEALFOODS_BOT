@@ -14,6 +14,7 @@
   padding: 14px 16px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  position: relative;
 }
 
 .page-header h1 {
@@ -21,6 +22,40 @@
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.3px;
+}
+
+.page-header .back-btn {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.page-header .confirm-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border: none;
+  color: #1976d2;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.page-header .confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .page-content {
@@ -126,4 +161,299 @@
 .error-screen p {
   color: #d32f2f;
   font-size: 15px;
+}
+
+/* Order list */
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 4px solid #1976d2;
+}
+
+.order-card.editable {
+  border-left-color: #2e7d32;
+}
+
+.order-card.cancelled {
+  border-left-color: #bbb;
+  opacity: 0.7;
+}
+
+.order-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-date {
+  font-weight: 600;
+  font-size: 15px;
+  color: #222;
+}
+
+.order-price {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1976d2;
+}
+
+.order-status {
+  font-size: 12px;
+  color: #666;
+}
+
+.order-edit-badge {
+  font-size: 11px;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  border-bottom: 2px solid #e0e0e0;
+  background: white;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+.tab.active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+}
+
+/* Order summary bar */
+.order-summary {
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #555;
+}
+
+.order-summary-row.total {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid #eee;
+}
+
+/* Product rows */
+.product-row {
+  background: white;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  border-left: 3px solid transparent;
+}
+
+.product-row--active {
+  border-left-color: #1976d2;
+}
+
+.product-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.product-row-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #222;
+  flex: 1;
+}
+
+.product-row-unit-price {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.product-row-collapsed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.product-row-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.product-row-hint {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.product-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-btn {
+  background: #e3f0fb;
+  border: none;
+  color: #1976d2;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #1976d2;
+  background: white;
+  color: #1976d2;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.qty-btn:disabled {
+  border-color: #ccc;
+  color: #ccc;
+  cursor: default;
+}
+
+.qty-value {
+  min-width: 28px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.product-row-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1976d2;
+  margin-left: auto;
+}
+
+/* Search input */
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23aaa' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") no-repeat 11px center;
+  background-size: 16px;
+  color: #333;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.15);
+}
+
+.search-input::placeholder {
+  color: #bbb;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #aaa;
+  font-size: 15px;
+}
+
+/* Cancel button */
+.cancel-order-btn {
+  background: none;
+  border: 1px solid #d32f2f;
+  color: #d32f2f;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  width: 100%;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+/* Bottom bar with summary + confirm */
+.order-bottom {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+}
+
+.confirm-bar {
+  padding: 12px 16px;
+}
+
+.confirm-bar-btn {
+  width: 100%;
+  padding: 14px;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+}
+
+.confirm-bar-btn:disabled {
+  background: #ccc;
+  cursor: default;
 }

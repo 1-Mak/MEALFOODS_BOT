@@ -47,10 +47,31 @@ async def lifespan(_app: FastAPI):  # noqa: ANN201
     client = MaxClient(token)
 
     me = await client.get_me()
-    logger.info(
-        "Bot connected: %s (@%s)",
-        me.get("first_name"), me.get("username"),
-    )
+    username = me.get("username", "")
+    logger.info("Bot connected: %s (@%s)", me.get("first_name"), username)
+    if username:
+        logger.info(
+            "Bot deep link (triggers bot_started every time): https://max.ru/%s?start=1",
+            username,
+        )
+
+    try:
+        subs = await client.get_subscriptions()
+        if subs.get("subscriptions"):
+            await client.delete_webhook()
+            logger.info("Webhook deleted — polling will now receive all events")
+        else:
+            logger.info("No webhook subscriptions found")
+    except Exception:
+        logger.warning("Failed to check/delete webhook (non-critical)", exc_info=True)
+
+    try:
+        await client.set_my_commands([
+            {"name": "start", "description": "Начать работу или авторизоваться."},
+        ])
+        logger.info("Bot commands registered")
+    except Exception:
+        logger.warning("Failed to register bot commands (non-critical)", exc_info=True)
 
     handler = make_handler(client)
     _polling_task = asyncio.create_task(run_polling(client, handler))

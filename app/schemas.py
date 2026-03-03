@@ -72,3 +72,31 @@ class OrderUpdateIn(BaseModel):
     delivery_point_guid: str | None = None
     delivery_date: date | None = None
     items: list[OrderItemIn] | None = None
+
+
+# ------------------------------------------------------------------
+# Order output
+# ------------------------------------------------------------------
+
+class OrderItemOut(BaseModel):
+    id: int
+    product_guid: str
+    product_name: str
+    quantity: int
+    price: float
+    box_multiplicity: int
+    net_weight: float
+    gross_weight: float
+
+
+class OrderOut(BaseModel):
+    id: int
+    e4_guid: str | None
+    counterparty_guid: str
+    delivery_point_guid: str
+    delivery_date: str
+    status: str
+    stage: str
+    total_price: float
+    created_at: str
+    items: list[OrderItemOut] = []

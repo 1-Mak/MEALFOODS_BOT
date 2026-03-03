@@ -87,9 +87,15 @@ def make_handler(client: MaxClient):
 # ------------------------------------------------------------------
 
 async def _handle_bot_started(client: MaxClient, update: dict[str, Any]) -> None:
+    logger.info("bot_started full update: %s", update)
+
     user = update.get("user", {})
     user_id: int | None = user.get("user_id")
     chat_id: int | None = update.get("chat_id")
+
+    if chat_id is None and user_id is None:
+        logger.error("bot_started: both chat_id and user_id are None, cannot send message")
+        return
 
     # If user already registered — send open_app right away
     if user_id:
@@ -120,10 +126,6 @@ async def _handle_message(client: MaxClient, update: dict[str, Any]) -> None:
     phone = _extract_phone(message)
     if phone:
         await _handle_contact(client, chat_id=chat_id, user_id=user_id, phone=phone)
-        return
-
-    if text == "/start":
-        await _send_contact_request(client, chat_id=chat_id, user_id=user_id)
         return
 
     # Any other text — check if user is registered

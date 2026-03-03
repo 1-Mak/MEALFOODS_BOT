@@ -129,6 +129,21 @@ class MaxClient:
             params["types"] = types
         return await self._request("GET", "/updates", params=params)
 
+    async def get_subscriptions(self) -> dict[str, Any]:
+        """GET /subscriptions — list active webhook subscriptions."""
+        return await self._request("GET", "/subscriptions")
+
+    async def delete_webhook(self) -> dict[str, Any]:
+        """DELETE /subscriptions — remove webhook so polling receives all events."""
+        return await self._request("DELETE", "/subscriptions")
+
+    async def set_my_commands(
+        self,
+        commands: list[dict[str, str]],
+    ) -> dict[str, Any]:
+        """PATCH /me — update bot profile including commands (shown in command picker)."""
+        return await self._request("PATCH", "/me", json={"commands": commands})
+
     async def answer_callback(
         self,
         callback_id: str,

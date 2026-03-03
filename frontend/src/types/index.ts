@@ -25,3 +25,27 @@ export interface AuthResponse {
   user_id: number;
   counterparties: Counterparty[];
 }
+
+export interface OrderItem {
+  id: number;
+  product_guid: string;
+  product_name: string;
+  quantity: number;
+  price: number;
+  box_multiplicity: number;
+  net_weight: number;
+  gross_weight: number;
+}
+
+export interface Order {
+  id: number;
+  e4_guid: string | null;
+  counterparty_guid: string;
+  delivery_point_guid: string;
+  delivery_date: string;
+  status: string;
+  stage: string;
+  total_price: number;
+  created_at: string;
+  items: OrderItem[];
+}
