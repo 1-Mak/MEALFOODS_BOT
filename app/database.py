@@ -233,3 +233,44 @@ async def cancel_order(order_id: int) -> None:
             (order_id,),
         )
         await db.commit()
+
+
+async def update_order_status_by_e4_guid(
+    e4_guid: str,
+    status: str,
+    stage: str | None = None,
+) -> dict | None:
+    """Update order status/stage by E4 GUID (called from 1C webhook).
+
+    Returns the updated order row or None if not found.
+    """
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        if stage is not None:
+            await db.execute(
+                "UPDATE orders SET status = ?, stage = ? WHERE e4_guid = ?",
+                (status, stage, e4_guid),
+            )
+        else:
+            await db.execute(
+                "UPDATE orders SET status = ? WHERE e4_guid = ?",
+                (status, e4_guid),
+            )
+        await db.commit()
+        cursor = await db.execute(
+            "SELECT * FROM orders WHERE e4_guid = ?", (e4_guid,)
+        )
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
+
+async def get_user_by_counterparty_guid(counterparty_guid: str) -> dict | None:
+    """Find a user by counterparty GUID (to send bot notification)."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE counterparty_guid = ? LIMIT 1",
+            (counterparty_guid,),
+        )
+        row = await cursor.fetchone()
+        return dict(row) if row else None

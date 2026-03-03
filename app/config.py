@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     max_bot_token: SecretStr
     miniapp_url: str = ""
 
-    # 1С OData (этап 7, пока опциональные)
-    e4_odata_url: str = ""
+    # 1С HTTP-сервис (sverka)
+    e4_http_url: str = ""   # http://srv-dev2/<база>/hs/sverka
     e4_username: str = ""
     e4_password: SecretStr = SecretStr("")
 

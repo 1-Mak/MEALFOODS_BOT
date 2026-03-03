@@ -11,7 +11,8 @@ from app.config import settings
 from app.database import init_db
 from app.max_client import MaxClient
 from app.polling import run_polling
-from app.routers import auth, counterparties, orders, products
+from app.routers import auth, counterparties, orders, products, webhook
+from app.routers.webhook import set_bot_client
 
 # ------------------------------------------------------------------
 # Logging
@@ -73,6 +74,8 @@ async def lifespan(_app: FastAPI):  # noqa: ANN201
     except Exception:
         logger.warning("Failed to register bot commands (non-critical)", exc_info=True)
 
+    set_bot_client(client)
+
     handler = make_handler(client)
     _polling_task = asyncio.create_task(run_polling(client, handler))
     logger.info("Polling task started")
@@ -100,6 +103,7 @@ app.include_router(auth.router)
 app.include_router(counterparties.router)
 app.include_router(orders.router)
 app.include_router(products.router)
+app.include_router(webhook.router)
 
 
 @app.get("/health")
