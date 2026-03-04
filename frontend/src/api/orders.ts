@@ -23,8 +23,8 @@ export async function getOrders(counterpartyGuid: string): Promise<Order[]> {
   return apiFetch<Order[]>(`/api/orders/?counterparty_guid=${counterpartyGuid}`);
 }
 
-export async function getOrder(orderId: number): Promise<Order> {
-  return apiFetch<Order>(`/api/orders/${orderId}`);
+export async function getOrder(e4Guid: string): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${e4Guid}`);
 }
 
 export async function createOrder(body: OrderCreateIn): Promise<Order> {
@@ -34,15 +34,15 @@ export async function createOrder(body: OrderCreateIn): Promise<Order> {
   });
 }
 
-export async function updateOrder(orderId: number, body: OrderUpdateIn): Promise<Order> {
-  return apiFetch<Order>(`/api/orders/${orderId}`, {
+export async function updateOrder(e4Guid: string, body: OrderUpdateIn): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${e4Guid}`, {
     method: "PUT",
     body: JSON.stringify(body),
   });
 }
 
-export async function cancelOrder(orderId: number): Promise<Order> {
-  return apiFetch<Order>(`/api/orders/${orderId}/cancel`, {
+export async function cancelOrder(e4Guid: string): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${e4Guid}/cancel`, {
     method: "POST",
   });
 }

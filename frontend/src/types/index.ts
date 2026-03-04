@@ -27,7 +27,6 @@ export interface AuthResponse {
 }
 
 export interface OrderItem {
-  id: number;
   product_guid: string;
   product_name: string;
   quantity: number;
@@ -38,8 +37,7 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: number;
-  e4_guid: string | null;
+  e4_guid: string;
   counterparty_guid: string;
   delivery_point_guid: string;
   delivery_date: string;

@@ -78,7 +78,7 @@ export default function OrderFormPage() {
         if (points.length === 1) setSelectedDp(points[0].e4_guid);
 
         if (!isNew && orderId) {
-          const order = await getOrder(Number(orderId));
+          const order = await getOrder(orderId!);
           setExistingOrder(order);
           setDeliveryDate(order.delivery_date);
           setSelectedDp(order.delivery_point_guid);
@@ -141,7 +141,7 @@ export default function OrderFormPage() {
           body.delivery_point_guid = selectedDp;
           body.delivery_date = deliveryDate;
         }
-        await updateOrder(Number(orderId), body);
+        await updateOrder(orderId!, body);
       }
       navigate(-1);
     } catch (e: any) {
@@ -156,7 +156,7 @@ export default function OrderFormPage() {
     if (!confirm("Отменить заказ?")) return;
     setSaving(true);
     try {
-      await cancelOrder(Number(orderId));
+      await cancelOrder(orderId!);
       navigate(-1);
     } catch (e: any) {
       setError(e.message);

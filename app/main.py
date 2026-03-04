@@ -108,4 +108,4 @@ app.include_router(webhook.router)
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "e4_http": bool(__import__("app.config", fromlist=["settings"]).settings.e4_http_url)}

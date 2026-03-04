@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.config import settings
 
@@ -47,6 +47,30 @@ class E4Product:
     vat_rate: float
 
 
+@dataclass
+class E4OrderItem:
+    product_guid: str
+    product_name: str
+    quantity: int
+    price: float
+    box_multiplicity: int
+    net_weight: float
+    gross_weight: float
+
+
+@dataclass
+class E4Order:
+    e4_guid: str
+    counterparty_guid: str
+    delivery_point_guid: str
+    delivery_date: str
+    status: str
+    stage: str
+    total_price: float
+    created_at: str
+    items: list[E4OrderItem] = field(default_factory=list)
+
+
 # ------------------------------------------------------------------
 # Mock data (used when E4_HTTP_URL is not configured)
 # ------------------------------------------------------------------
@@ -58,6 +82,7 @@ _COUNTERPARTIES = [
     E4Counterparty("guid-cp-004", "ИП Макаров", "+79200585280"),
     E4Counterparty("guid-cp-005", "ИП Субботина", "+79081511376"),
     E4Counterparty("guid-cp-006", "ИП Субботина", "+79202590557"),
+    E4Counterparty("guid-cp-006", "ИП Субботина", "+79534731803"),
 ]
 
 _DELIVERY_POINTS = [
@@ -65,6 +90,8 @@ _DELIVERY_POINTS = [
     E4DeliveryPoint("guid-dp-002", "guid-cp-001", "г. Москва, ул. Мира, д. 5"),
     E4DeliveryPoint("guid-dp-003", "guid-cp-002", "г. Казань, ул. Баумана, д. 3"),
     E4DeliveryPoint("guid-dp-004", "guid-cp-003", "г. Самара, ул. Победы, д. 7"),
+    E4DeliveryPoint("guid-dp-005", "guid-cp-004", "г. Новосибирск, ул. Красный проспект, д. 1"),
+    E4DeliveryPoint("guid-dp-006", "guid-cp-004", "г. Новосибирск, ул. Советская, д. 15"),
 ]
 
 _PRODUCTS = [
@@ -79,7 +106,27 @@ _MATRIX: dict[str, list[str]] = {
     "guid-cp-001": ["guid-pr-001", "guid-pr-002", "guid-pr-003", "guid-pr-004", "guid-pr-005"],
     "guid-cp-002": ["guid-pr-001", "guid-pr-003", "guid-pr-005"],
     "guid-cp-003": ["guid-pr-002", "guid-pr-004"],
+    "guid-cp-004": ["guid-pr-001", "guid-pr-002", "guid-pr-003", "guid-pr-004", "guid-pr-005"],
+    "guid-cp-005": ["guid-pr-001", "guid-pr-002", "guid-pr-003", "guid-pr-004", "guid-pr-005"],
+    "guid-cp-006": ["guid-pr-001", "guid-pr-002", "guid-pr-003", "guid-pr-004", "guid-pr-005"],
 }
+
+_MOCK_ORDERS: list[E4Order] = [
+    E4Order(
+        e4_guid="guid-order-001",
+        counterparty_guid="guid-cp-001",
+        delivery_point_guid="guid-dp-001",
+        delivery_date="2026-03-10",
+        status="Резервируется",
+        stage="Заказано",
+        total_price=1350.00,
+        created_at="2026-03-04T10:00:00",
+        items=[
+            E4OrderItem("guid-pr-001", "Котлета куриная 100г", 10, 45.00, 20, 0.100, 0.120),
+            E4OrderItem("guid-pr-002", "Сосиски Молочные 500г", 5, 120.00, 12, 0.500, 0.550),
+        ],
+    ),
+]
 
 
 # ------------------------------------------------------------------
@@ -111,6 +158,20 @@ async def get_product_matrix(counterparty_guid: str) -> list[E4Product]:
         return await _http(counterparty_guid)
     product_guids = _MATRIX.get(counterparty_guid, [])
     return [p for p in _PRODUCTS if p.e4_guid in product_guids]
+
+
+async def get_orders(counterparty_guid: str) -> list[E4Order]:
+    if _use_http():
+        from app.e4_http_client import get_orders as _http
+        return await _http(counterparty_guid)
+    return [o for o in _MOCK_ORDERS if o.counterparty_guid == counterparty_guid]
+
+
+async def get_order(e4_guid: str) -> E4Order | None:
+    if _use_http():
+        from app.e4_http_client import get_order as _http
+        return await _http(e4_guid)
+    return next((o for o in _MOCK_ORDERS if o.e4_guid == e4_guid), None)
 
 
 async def create_order(order_data: dict) -> str:

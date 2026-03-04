@@ -53,7 +53,7 @@ class ProductOut(BaseModel):
 
 
 # ------------------------------------------------------------------
-# Order (sent to 1C via e4_service)
+# Order input
 # ------------------------------------------------------------------
 
 class OrderItemIn(BaseModel):
@@ -75,11 +75,10 @@ class OrderUpdateIn(BaseModel):
 
 
 # ------------------------------------------------------------------
-# Order output
+# Order output (data comes from 1C, identified by e4_guid)
 # ------------------------------------------------------------------
 
 class OrderItemOut(BaseModel):
-    id: int
     product_guid: str
     product_name: str
     quantity: int
@@ -90,8 +89,7 @@ class OrderItemOut(BaseModel):
 
 
 class OrderOut(BaseModel):
-    id: int
-    e4_guid: str | None
+    e4_guid: str
     counterparty_guid: str
     delivery_point_guid: str
     delivery_date: str

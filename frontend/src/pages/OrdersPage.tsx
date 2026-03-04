@@ -73,9 +73,9 @@ export default function OrdersPage() {
           <div className="orders-list">
             {orders.map((order) => (
               <div
-                key={order.id}
+                key={order.e4_guid}
                 className={getCardClass(order)}
-                onClick={() => navigate(`/orders/${order.id}?cp=${cpGuid}&cpName=${encodeURIComponent(cpName)}`)}
+                onClick={() => navigate(`/orders/${order.e4_guid}?cp=${cpGuid}&cpName=${encodeURIComponent(cpName)}`)}
               >
                 <div className="order-card-row">
                   <span className="order-date">Доставка: {formatDate(order.delivery_date)}</span>
