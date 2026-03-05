@@ -1,12 +1,11 @@
-"""HTTP client for 1C custom HTTP service (integrationMax).
+"""HTTP client for 1C custom HTTP service (integrationMAX).
 
-Endpoints (confirmed with 1C programmer):
-  GET  <E4_HTTP_URL>/Ping                              — проверка доступности
-  GET  <E4_HTTP_URL>/GetCounterpartys/PhoneNumber={p}  — контрагент по номеру телефона
-  GET  <E4_HTTP_URL>/GetData                           — точки доставки, номенклатура, заказы
-  POST <E4_HTTP_URL>/GetRequest                        — создание/обновление/отмена заказа
-
-TODO: уточнить у программиста имена полей ответа.
+Endpoints:
+  GET  <E4_HTTP_URL>/Ping                                        — проверка доступности
+  GET  <E4_HTTP_URL>/GetCounterpartiesByPhone?phone={phone}      — контрагент по телефону
+  GET  <E4_HTTP_URL>/GetCounterpartyDeliveryPointsAddresses?...  — точки доставки
+  GET  <E4_HTTP_URL>/GetCounterpartyGoods?...                    — номенклатура
+  POST <E4_HTTP_URL>/GetRequest                                  — создание/обновление/отмена заказа
 """
 from __future__ import annotations
 
@@ -129,16 +128,17 @@ async def get_order(e4_guid: str):
     )
 
 async def get_counterparties_by_phone(phone: str) -> list[E4Counterparty]:
-    """GET /GetCounterpartys/PhoneNumber={phone} — поиск контрагента по номеру телефона."""
+    """GET /GetCounterpartiesByPhone?phone={phone} — поиск контрагента по номеру телефона."""
+    normalized = phone.lstrip("+")
     async with _client() as c:
-        resp = await c.get(f"GetCounterpartys/PhoneNumber={phone}")
+        resp = await c.get("GetCounterpartiesByPhone", params={"phone": normalized})
         resp.raise_for_status()
         data = resp.json()
-    rows = data if isinstance(data, list) else data.get("РезультатВыгрузки", [])
+    rows = data.get("Результат", [])
     return [
         E4Counterparty(
-            e4_guid=row["guid"],    # TODO: уточнить имя поля
-            name=row["name"],       # TODO: уточнить имя поля
+            e4_guid=row["ГУИД"],
+            name=row["ПредставлениеКонтрагента"].strip(),
             phone=phone,
         )
         for row in rows
@@ -146,23 +146,48 @@ async def get_counterparties_by_phone(phone: str) -> list[E4Counterparty]:
 
 
 async def get_delivery_points(counterparty_guid: str) -> list[E4DeliveryPoint]:
-    """GET /GetData — delivery addresses for a counterparty."""
-    # TODO: уточнить у программиста параметры и структуру ответа
-    data = await _get({"type": "delivery_points", "counterparty_guid": counterparty_guid})
-    return [
-        E4DeliveryPoint(
-            e4_guid=row["guid"],              # TODO: уточнить имя поля
-            counterparty_guid=counterparty_guid,
-            address=row["address"],           # TODO: уточнить имя поля
-        )
-        for row in (data if isinstance(data, list) else data.get("value", []))
-    ]
+    """GET /GetCounterpartyDeliveryPointsAddresses?guidCounterparty={guid} — точки доставки."""
+    async with _client() as c:
+        resp = await c.get("GetCounterpartyDeliveryPointsAddresses", params={"guidCounterparty": counterparty_guid})
+        resp.raise_for_status()
+        data = resp.json()
+    result_obj = data.get("Результат", {})
+    points = result_obj.get("ТочкиДоставки", [])
+    addresses = result_obj.get("АдресаДоставки", [])
+    addr_map = {a["ГУИДВладельца"]: a["Представление"] for a in addresses}
+    if points:
+        # Есть точки доставки — сопоставляем с адресами
+        return [
+            E4DeliveryPoint(
+                e4_guid=pt["ГУИД"],
+                counterparty_guid=counterparty_guid,
+                address=f"{pt['ПредставлениеТочкиДоставки']} — {addr_map[pt['ГУИД']]}"
+                    if pt["ГУИД"] in addr_map
+                    else pt["ПредставлениеТочкиДоставки"],
+            )
+            for pt in points
+        ]
+    # Нет точек доставки — используем адреса напрямую (дедупликация)
+    seen = set()
+    result = []
+    for a in addresses:
+        addr = a["Представление"]
+        if addr not in seen:
+            seen.add(addr)
+            result.append(E4DeliveryPoint(
+                e4_guid=a["ГУИДВладельца"],
+                counterparty_guid=counterparty_guid,
+                address=addr,
+            ))
+    return result
 
 
 async def get_product_matrix(counterparty_guid: str) -> list[E4Product]:
-    """GET /GetData — products with prices for a counterparty."""
-    # TODO: уточнить у программиста параметры и структуру ответа
-    data = await _get({"type": "products", "counterparty_guid": counterparty_guid})
+    """GET /GetCounterpartyGoods?guidCounterparty={guid} — номенклатура контрагента."""
+    async with _client() as c:
+        resp = await c.get("GetCounterpartyGoods", params={"guidCounterparty": counterparty_guid})
+        resp.raise_for_status()
+        data = resp.json()
     return [
         E4Product(
             e4_guid=row["guid"],                        # TODO: уточнить

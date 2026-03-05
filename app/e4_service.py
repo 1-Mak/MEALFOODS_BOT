@@ -3,8 +3,8 @@
 When E4_HTTP_URL is set in .env  → delegates to e4_http_client (real 1C HTTP service).
 When E4_HTTP_URL is empty        → falls back to mock data (for local dev/testing).
 
-Only this file and e4_http_client.py need to change for 1C integration.
-No other code (routers, bot) needs to be touched.
+In HTTP mode, responses are cached in memory (see app/cache.py).
+If 1C is temporarily unavailable, stale cache is returned as fallback.
 """
 from __future__ import annotations
 
@@ -12,9 +12,17 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 
+from app import cache
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+# TTL в секундах
+TTL_COUNTERPARTIES = 60 * 60   # 60 мин
+TTL_DELIVERY_POINTS = 60 * 60  # 60 мин
+TTL_PRODUCTS = 30 * 60         # 30 мин
+TTL_ORDERS = 2 * 60            # 2 мин
+TTL_ORDER = 60                 # 1 мин
 
 
 # ------------------------------------------------------------------
@@ -137,59 +145,96 @@ def _use_http() -> bool:
     return bool(settings.e4_http_url)
 
 
+async def _cached_http(cache_key: str, ttl: float, http_call):
+    """Fetch from cache or call 1C HTTP, with stale fallback on error."""
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    try:
+        result = await http_call()
+        cache.set(cache_key, result, ttl)
+        return result
+    except Exception as exc:
+        stale = cache.get_stale(cache_key)
+        if stale is not None:
+            logger.warning("1C unavailable (%s), returning stale cache for %s", exc, cache_key)
+            return stale
+        raise
+
+
 async def get_counterparties_by_phone(phone: str) -> list[E4Counterparty]:
     if _use_http():
         from app.e4_http_client import get_counterparties_by_phone as _http
-        return await _http(phone)
+        return await _cached_http(f"counterparties:{phone}", TTL_COUNTERPARTIES, lambda: _http(phone))
     normalized = phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
     return [cp for cp in _COUNTERPARTIES if cp.phone == normalized]
 
 
 async def get_delivery_points(counterparty_guid: str) -> list[E4DeliveryPoint]:
     if _use_http():
-        from app.e4_http_client import get_delivery_points as _http
-        return await _http(counterparty_guid)
+        try:
+            from app.e4_http_client import get_delivery_points as _http
+            return await _cached_http(f"delivery_points:{counterparty_guid}", TTL_DELIVERY_POINTS, lambda: _http(counterparty_guid))
+        except Exception:
+            logger.warning("1C delivery_points not available, using mock data")
     return [dp for dp in _DELIVERY_POINTS if dp.counterparty_guid == counterparty_guid]
 
 
 async def get_product_matrix(counterparty_guid: str) -> list[E4Product]:
     if _use_http():
-        from app.e4_http_client import get_product_matrix as _http
-        return await _http(counterparty_guid)
+        try:
+            from app.e4_http_client import get_product_matrix as _http
+            return await _cached_http(f"products:{counterparty_guid}", TTL_PRODUCTS, lambda: _http(counterparty_guid))
+        except Exception:
+            logger.warning("1C products not available, using mock data")
     product_guids = _MATRIX.get(counterparty_guid, [])
     return [p for p in _PRODUCTS if p.e4_guid in product_guids]
 
 
 async def get_orders(counterparty_guid: str) -> list[E4Order]:
     if _use_http():
-        from app.e4_http_client import get_orders as _http
-        return await _http(counterparty_guid)
+        try:
+            from app.e4_http_client import get_orders as _http
+            return await _cached_http(f"orders:{counterparty_guid}", TTL_ORDERS, lambda: _http(counterparty_guid))
+        except Exception:
+            logger.warning("1C orders not available, using mock data")
     return [o for o in _MOCK_ORDERS if o.counterparty_guid == counterparty_guid]
 
 
 async def get_order(e4_guid: str) -> E4Order | None:
     if _use_http():
-        from app.e4_http_client import get_order as _http
-        return await _http(e4_guid)
+        try:
+            from app.e4_http_client import get_order as _http
+            return await _cached_http(f"order:{e4_guid}", TTL_ORDER, lambda: _http(e4_guid))
+        except Exception:
+            logger.warning("1C order not available, using mock data")
     return next((o for o in _MOCK_ORDERS if o.e4_guid == e4_guid), None)
 
 
 async def create_order(order_data: dict) -> str:
     if _use_http():
         from app.e4_http_client import create_order as _http
-        return await _http(order_data)
+        result = await _http(order_data)
+        cache.invalidate(f"orders:{order_data.get('counterparty_guid', '')}")
+        return result
     return f"guid-order-{uuid.uuid4().hex[:8]}"
 
 
 async def update_order(order_guid: str, data: dict) -> str:
     if _use_http():
         from app.e4_http_client import update_order as _http
-        return await _http(order_guid, data)
+        result = await _http(order_guid, data)
+        cache.invalidate(f"order:{order_guid}")
+        cache.invalidate("orders:")
+        return result
     return "updated"
 
 
 async def cancel_order(order_guid: str) -> str:
     if _use_http():
         from app.e4_http_client import cancel_order as _http
-        return await _http(order_guid)
+        result = await _http(order_guid)
+        cache.invalidate(f"order:{order_guid}")
+        cache.invalidate("orders:")
+        return result
     return "cancelled"

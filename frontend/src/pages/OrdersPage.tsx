@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@maxhub/max-ui";
 import { getOrders } from "../api/orders";
 import type { Order } from "../types";
+import ErrorDetails from "../components/ErrorDetails";
 
 const EDITABLE_STAGES = new Set(["Заказано", "Зарезервировано"]);
 
@@ -28,18 +29,18 @@ export default function OrdersPage() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     if (!cpGuid) return;
     getOrders(cpGuid)
       .then(setOrders)
-      .catch((e) => setError(e.message))
+      .catch((e) => setError(e))
       .finally(() => setLoading(false));
   }, [cpGuid]);
 
   if (loading) return <div className="loading-screen"><p>Загрузка...</p></div>;
-  if (error) return <div className="error-screen"><p>{error}</p></div>;
+  if (error) return <div className="error-screen"><p>{error.message || String(error)}</p><ErrorDetails error={error} /></div>;
 
   return (
     <div className="page">

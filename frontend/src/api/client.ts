@@ -30,7 +30,12 @@ export async function apiFetch<T>(
 
   if (!resp.ok) {
     const body = await resp.json().catch(() => ({}));
-    throw new Error(body.detail || `HTTP ${resp.status}`);
+    const msg = body.detail || `HTTP ${resp.status}`;
+    const err = new Error(msg) as Error & { status: number; url: string; body: unknown };
+    err.status = resp.status;
+    err.url = `${options.method || "GET"} ${path}`;
+    err.body = body;
+    throw err;
   }
 
   return resp.json();

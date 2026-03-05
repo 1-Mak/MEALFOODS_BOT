@@ -4,7 +4,8 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.bot import make_handler
 from app.config import settings
@@ -43,42 +44,45 @@ async def lifespan(_app: FastAPI):  # noqa: ANN201
     await init_db()
     logger.info("Database ready")
 
-    # Start MAX bot
+    # Start MAX bot (non-critical — API works without bot)
     token = settings.max_bot_token.get_secret_value()
     client = MaxClient(token)
 
-    me = await client.get_me()
-    username = me.get("username", "")
-    logger.info("Bot connected: %s (@%s)", me.get("first_name"), username)
-    if username:
-        logger.info(
-            "Bot deep link (triggers bot_started every time): https://max.ru/%s?start=1",
-            username,
-        )
-
     try:
-        subs = await client.get_subscriptions()
-        if subs.get("subscriptions"):
-            await client.delete_webhook()
-            logger.info("Webhook deleted — polling will now receive all events")
-        else:
-            logger.info("No webhook subscriptions found")
+        me = await client.get_me()
+        username = me.get("username", "")
+        logger.info("Bot connected: %s (@%s)", me.get("first_name"), username)
+        if username:
+            logger.info(
+                "Bot deep link (triggers bot_started every time): https://max.ru/%s?start=1",
+                username,
+            )
+
+        try:
+            subs = await client.get_subscriptions()
+            if subs.get("subscriptions"):
+                await client.delete_webhook()
+                logger.info("Webhook deleted — polling will now receive all events")
+            else:
+                logger.info("No webhook subscriptions found")
+        except Exception:
+            logger.warning("Failed to check/delete webhook (non-critical)", exc_info=True)
+
+        try:
+            await client.set_my_commands([
+                {"name": "start", "description": "Начать работу или авторизоваться."},
+            ])
+            logger.info("Bot commands registered")
+        except Exception:
+            logger.warning("Failed to register bot commands (non-critical)", exc_info=True)
+
+        set_bot_client(client)
+
+        handler = make_handler(client)
+        _polling_task = asyncio.create_task(run_polling(client, handler))
+        logger.info("Polling task started")
     except Exception:
-        logger.warning("Failed to check/delete webhook (non-critical)", exc_info=True)
-
-    try:
-        await client.set_my_commands([
-            {"name": "start", "description": "Начать работу или авторизоваться."},
-        ])
-        logger.info("Bot commands registered")
-    except Exception:
-        logger.warning("Failed to register bot commands (non-critical)", exc_info=True)
-
-    set_bot_client(client)
-
-    handler = make_handler(client)
-    _polling_task = asyncio.create_task(run_polling(client, handler))
-    logger.info("Polling task started")
+        logger.warning("MAX API unavailable — bot disabled, API-only mode", exc_info=True)
 
     yield
 
@@ -98,6 +102,21 @@ async def lifespan(_app: FastAPI):  # noqa: ANN201
 # ------------------------------------------------------------------
 
 app = FastAPI(title="MAX MealFoods Bot", lifespan=lifespan)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Return detailed error info instead of generic 500."""
+    import httpx
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    detail = str(exc)
+    if isinstance(exc, httpx.HTTPStatusError):
+        detail = f"1C returned {exc.response.status_code} for {exc.request.url}"
+    return JSONResponse(
+        status_code=500,
+        content={"detail": detail, "type": type(exc).__name__},
+    )
+
 
 app.include_router(auth.router)
 app.include_router(counterparties.router)

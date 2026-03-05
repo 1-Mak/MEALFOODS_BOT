@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@maxhub/max-ui";
 import { authenticate } from "../api/auth";
 import type { AuthResponse, Counterparty } from "../types";
+import ErrorDetails from "../components/ErrorDetails";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>(null);
   const [auth, setAuth] = useState<AuthResponse | null>(null);
   const [selectedCp, setSelectedCp] = useState<Counterparty | null>(null);
 
@@ -19,7 +20,7 @@ export default function HomePage() {
           setSelectedCp(data.counterparties[0]);
         }
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -34,7 +35,8 @@ export default function HomePage() {
   if (error) {
     return (
       <div className="error-screen">
-        <p>{error}</p>
+        <p>{error.message || String(error)}</p>
+        <ErrorDetails error={error} />
       </div>
     );
   }

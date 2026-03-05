@@ -52,7 +52,7 @@ async def dev_auth():
     Works only when a user with this phone exists in DB.
     Remove this endpoint before production.
     """
-    test_phone = "+79200585280"
+    test_phone = "88005553535"
     test_user_id = 1
 
     # Ensure test user exists

@@ -151,6 +151,7 @@
 .loading-screen,
 .error-screen {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
@@ -160,7 +161,9 @@
 
 .error-screen p {
   color: #d32f2f;
-  font-size: 15px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 /* Order list */

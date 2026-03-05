@@ -16,8 +16,6 @@ async def list_products(
     user: dict = Depends(get_current_user),
 ):
     products = await get_product_matrix(counterparty_guid)
-    if not products:
-        raise HTTPException(status_code=404, detail="Матрица товаров не найдена")
     return [
         ProductOut(
             e4_guid=p.e4_guid,

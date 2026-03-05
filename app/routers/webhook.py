@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app import cache
 from app.database import get_user_by_counterparty_guid
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,10 @@ async def receive_order_status(body: OrderStatusUpdate) -> dict[str, str]:
         "Webhook from 1C: order_guid=%s counterparty=%s status=%s stage=%s",
         body.order_guid, body.counterparty_guid, body.status, body.stage,
     )
+
+    # Invalidate cached orders for this counterparty
+    cache.invalidate(f"order:{body.order_guid}")
+    cache.invalidate(f"orders:{body.counterparty_guid}")
 
     await _notify_manager(body)
     return {"status": "ok"}

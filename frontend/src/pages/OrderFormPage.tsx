@@ -4,6 +4,7 @@ import { getDeliveryPoints } from "../api/counterparties";
 import { getProducts } from "../api/products";
 import { createOrder, updateOrder, cancelOrder, getOrder } from "../api/orders";
 import type { DeliveryPoint, Product, Order } from "../types";
+import ErrorDetails from "../components/ErrorDetails";
 
 const FULL_EDIT_STAGES = new Set(["Заказано"]);
 const QTY_EDIT_STAGES = new Set(["Зарезервировано"]);
@@ -49,7 +50,7 @@ export default function OrderFormPage() {
   const [tab, setTab] = useState<"main" | "products">("main");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>(null);
 
   const [deliveryDate, setDeliveryDate] = useState(defaultDate);
   const [deliveryPoints, setDeliveryPoints] = useState<DeliveryPoint[]>([]);
@@ -93,7 +94,7 @@ export default function OrderFormPage() {
           setCart(cartItems);
         }
       } catch (e: any) {
-        setError(e.message);
+        setError(e);
       } finally {
         setLoading(false);
       }
@@ -145,7 +146,7 @@ export default function OrderFormPage() {
       }
       navigate(-1);
     } catch (e: any) {
-      setError(e.message);
+      setError(e);
     } finally {
       setSaving(false);
     }
@@ -159,7 +160,7 @@ export default function OrderFormPage() {
       await cancelOrder(orderId!);
       navigate(-1);
     } catch (e: any) {
-      setError(e.message);
+      setError(e);
     } finally {
       setSaving(false);
     }
@@ -172,7 +173,7 @@ export default function OrderFormPage() {
   );
 
   if (loading) return <div className="loading-screen"><p>Загрузка...</p></div>;
-  if (error) return <div className="error-screen"><p>{error}</p></div>;
+  if (error) return <div className="error-screen"><p>{error.message || String(error)}</p><ErrorDetails error={error} /></div>;
 
   return (
     <div className="page">
